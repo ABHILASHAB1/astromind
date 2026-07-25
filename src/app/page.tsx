@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { promptCategories, quickActions } from '../data/prompts';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
-
+import { Capacitor } from '@capacitor/core';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 const triggerHaptic = async () => {
   try {
     await Haptics.impact({ style: ImpactStyle.Light });
@@ -55,7 +56,7 @@ const compressImage = (file: File, maxWidth = 800): Promise<string> => {
 };
 
 export default function App() {
-  const [view, setView] = useState<'welcome' | 'traditions' | 'birth_details' | 'permissions' | 'home' | 'chat' | 'birth_chart' | 'timeline' | 'palm' | 'daily_reading'>('welcome');
+  const [view, setView] = useState<'welcome' | 'traditions' | 'birth_details' | 'permissions' | 'home' | 'chat' | 'birth_chart' | 'timeline' | 'palm' | 'daily_reading' | 'nadi_reading'>('welcome');
   const [profile, setProfile] = useState({
     name: '',
     birthPlace: '',
@@ -96,6 +97,12 @@ export default function App() {
 
   const [dailyData, setDailyData] = useState<{score: number, summary: string, readingTitle: string, readingBody: string} | null>(null);
   const [isDailyLoading, setIsDailyLoading] = useState(false);
+
+  // Nadi States
+  const [isNadiLoading, setIsNadiLoading] = useState(false);
+  const [nadiResult, setNadiResult] = useState<any>(null);
+  const [nadiAttributes, setNadiAttributes] = useState("");
+  const [nadiImage, setNadiImage] = useState<string | null>(null);
 
   // Camera States
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -308,6 +315,61 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [astrologyData, view]);
+
+  const handleNadiPredict = async () => {
+    if (!nadiImage || !nadiAttributes) {
+      alert("Please capture your thumbprint and enter your attributes.");
+      return;
+    }
+    setIsNadiLoading(true);
+    
+    try {
+      // Convert base64 to blob
+      const res = await fetch(`data:image/jpeg;base64,${nadiImage}`);
+      const blob = await res.blob();
+      
+      const formData = new FormData();
+      formData.append('image', blob, 'thumbprint.jpg');
+      formData.append('attributes', nadiAttributes);
+
+      // Call the local FastAPI server
+      const apiRes = await fetch('http://localhost:8000/api/nadi/predict', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const data = await apiRes.json();
+      if (data.success) {
+        setNadiResult(data.results);
+      } else {
+        alert("Failed to process Nādī leaf.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error connecting to Python backend. Is FastAPI running on port 8000?");
+    }
+    setIsNadiLoading(false);
+  };
+
+  const captureThumbprint = async () => {
+    if (!Capacitor.isNativePlatform()) {
+       alert("Camera is only available in the native Android/iOS app. Please test on a device.");
+       return;
+    }
+    try {
+       const image = await Camera.getPhoto({
+         quality: 90,
+         allowEditing: false,
+         resultType: CameraResultType.Base64,
+         source: CameraSource.Camera
+       });
+       if (image.base64String) {
+          setNadiImage(image.base64String);
+       }
+    } catch (error) {
+       console.error("Camera error", error);
+    }
+  };
 
   return (
     <div className="mobile-container flex flex-col font-sans text-[#0A1128] bg-[#F8F9FB]">
@@ -573,6 +635,7 @@ export default function App() {
                         else if (action.id === 'birth_chart') setView('birth_chart');
                         else if (action.id === 'daily_horoscope') setView('daily_reading');
                         else if (action.id === 'timeline') setView('timeline');
+                        else if (action.id === 'nadi_reading') setView('nadi_reading');
                       }} className="flex items-center gap-2 bg-white border border-slate-100 rounded-full px-4 py-2 text-sm font-semibold text-[#0A1128] whitespace-nowrap shadow-sm hover:bg-slate-50 transition-colors">
                         <span>{action.icon}</span> {action.label}
                       </button>
