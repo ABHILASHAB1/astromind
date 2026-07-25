@@ -94,6 +94,9 @@ export default function App() {
   const [astrologyData, setAstrologyData] = useState<any>(null);
   const [isAstrologyLoading, setIsAstrologyLoading] = useState(false);
 
+  const [dailyData, setDailyData] = useState<{score: number, summary: string, readingTitle: string, readingBody: string} | null>(null);
+  const [isDailyLoading, setIsDailyLoading] = useState(false);
+
   // Camera States
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -204,6 +207,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: textToSend,
+          category: selectedCategory,
           context: {
             profile,
             astrology: astrologyData,
@@ -272,12 +276,38 @@ export default function App() {
     setIsAstrologyLoading(false);
   };
 
+  const fetchDaily = async () => {
+    if (dailyData || !astrologyData) return;
+    setIsDailyLoading(true);
+    try {
+      const res = await fetch('/api/daily', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile, astrologyData })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDailyData(data.daily);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsDailyLoading(false);
+  };
+
   React.useEffect(() => {
-    if (view === 'birth_chart' || view === 'timeline') {
+    if (view === 'birth_chart' || view === 'timeline' || view === 'home' || view === 'daily_reading') {
       fetchAstrology();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
+
+  React.useEffect(() => {
+    if (astrologyData && (view === 'home' || view === 'daily_reading')) {
+      fetchDaily();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [astrologyData, view]);
 
   return (
     <div className="mobile-container flex flex-col font-sans text-[#0A1128] bg-[#F8F9FB]">
@@ -438,16 +468,16 @@ export default function App() {
 
           {/* Today's Energy */}
           <div className="px-6 mt-16 relative z-10">
-            <div className="beige-gradient rounded-[24px] p-6 shadow-sm flex justify-between items-center relative overflow-hidden">
+            <div className="beige-gradient rounded-[24px] p-6 shadow-sm flex justify-between items-center relative overflow-hidden cursor-pointer" onClick={() => { triggerHaptic(); setView('daily_reading'); }}>
               <div>
                 <p className="text-[#0A1128] text-sm font-semibold mb-1">Today&apos;s Energy</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-[32px] font-bold text-[#0A1128]">86</span>
+                  <span className="text-[32px] font-bold text-[#0A1128]">{dailyData ? dailyData.score : '--'}</span>
                   <span className="text-sm font-medium text-[#0A1128]">/ 100</span>
                 </div>
-                <p className="text-xs text-[#0A1128]/70 mt-1">Favorable for new beginnings.</p>
+                <p className="text-xs text-[#0A1128]/70 mt-1">{dailyData ? dailyData.summary : 'Calculating...'}</p>
               </div>
-              <div className="w-16 h-16 rounded-full bg-yellow-300 shadow-inner mr-4"></div>
+              <div className="w-16 h-16 rounded-full bg-yellow-300 shadow-inner mr-4 flex items-center justify-center text-3xl">✨</div>
             </div>
           </div>
 
@@ -541,6 +571,8 @@ export default function App() {
                       <button key={action.id} onClick={() => {
                         if (action.id === 'palm') setView('palm');
                         else if (action.id === 'birth_chart') setView('birth_chart');
+                        else if (action.id === 'daily_horoscope') setView('daily_reading');
+                        else if (action.id === 'timeline') setView('timeline');
                       }} className="flex items-center gap-2 bg-white border border-slate-100 rounded-full px-4 py-2 text-sm font-semibold text-[#0A1128] whitespace-nowrap shadow-sm hover:bg-slate-50 transition-colors">
                         <span>{action.icon}</span> {action.label}
                       </button>
@@ -641,58 +673,42 @@ export default function App() {
              <div className="relative w-full py-12 pb-32">
                 <div className="absolute left-1/2 top-8 bottom-12 w-[2px] bg-slate-300 -translate-x-1/2"></div>
                 
-                {/* Item 1 */}
-                <div className="flex w-full items-start justify-center mb-12 relative">
-                  <div className="w-1/2 pr-8 text-right">
-                    <h4 className="font-bold text-sm text-[#0A1128]">Current</h4>
-                    <h4 className="font-bold text-sm text-[#0A1128]">Transits</h4>
-                    <p className="text-[11px] text-slate-400 mt-1">Taurus Sep</p>
-                  </div>
-                  <div className="absolute left-1/2 -translate-x-1/2 top-0 w-6 h-6 rounded-full bg-[#635BFF] flex items-center justify-center border-[4px] border-[#F8F9FB]">
-                     <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                  </div>
-                  <div className="w-1/2 pl-8">
-                    <h4 className="font-bold text-sm text-[#0A1128] mb-1">Mars</h4>
-                    <p className="text-[11px] text-[#0A1128] font-medium mb-2">Enters Health</p>
-                    <div className="bg-[#EEF2FF] text-[#635BFF] text-[9px] font-bold px-2 py-1 rounded w-fit mb-1">Focus on wellbeing</div>
-                    <div className="bg-[#EEF2FF] text-[#635BFF] text-[9px] font-bold px-2 py-1 rounded w-fit mb-1">New routines</div>
-                  </div>
-                </div>
+                {isAstrologyLoading && (
+                  <div className="text-center text-slate-500 text-sm mt-8">Calculating your transits...</div>
+                )}
+                
+                {astrologyData?.currentTransits?.map((transit: any, idx: number) => {
+                  const isLeft = idx % 2 === 0;
+                  return (
+                    <div key={idx} className="flex w-full items-start justify-center mb-12 relative">
+                      <div className={`w-1/2 ${isLeft ? 'pr-8 text-right' : 'pr-8 opacity-0'} flex flex-col items-end`}>
+                        {isLeft && (
+                          <>
+                            <h4 className="font-bold text-sm text-[#0A1128]">{transit.planet}</h4>
+                            <p className="text-[11px] text-slate-400 mt-1">Current Transit</p>
+                          </>
+                        )}
+                      </div>
+                      
+                      <div className={`absolute left-1/2 -translate-x-1/2 top-0 w-6 h-6 rounded-full flex items-center justify-center border-[4px] border-[#F8F9FB] ${isLeft ? 'bg-[#635BFF]' : 'bg-[#FBBF24]'}`}>
+                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                      </div>
 
-                {/* Item 2 */}
-                <div className="flex w-full items-start justify-center mb-12 relative">
-                  <div className="w-1/2 pr-8 text-right">
-                    <h4 className="font-bold text-sm text-[#0A1128]">Current</h4>
-                    <p className="text-[11px] text-slate-400 mt-1">Current Transits</p>
-                  </div>
-                  <div className="absolute left-1/2 -translate-x-1/2 top-0 w-5 h-5 rounded-full bg-[#F8F9FB] border-2 border-[#FBBF24]"></div>
-                  <div className="w-1/2 pl-8"></div>
-                </div>
-
-                {/* Item 3 */}
-                <div className="flex w-full items-start justify-center mb-12 relative">
-                  <div className="w-1/2 pr-8 text-right"></div>
-                  <div className="absolute left-1/2 -translate-x-1/2 top-0 w-5 h-5 rounded-full bg-[#F8F9FB] border-[4px] border-[#635BFF]"></div>
-                  <div className="w-1/2 pl-8">
-                    <h4 className="font-bold text-sm text-[#0A1128]">Current Transits</h4>
-                    <div className="bg-[#EEF2FF] text-[#635BFF] text-[9px] font-bold px-2 py-1 rounded w-fit mt-2">Emotional growth</div>
-                  </div>
-                </div>
-
-                {/* Item 4 */}
-                <div className="flex w-full items-start justify-center relative">
-                  <div className="w-1/2 pr-8 text-right">
-                    <h4 className="font-bold text-sm text-[#0A1128]">Date</h4>
-                    <p className="text-[11px] text-slate-400 mt-1">August</p>
-                  </div>
-                  <div className="absolute left-1/2 -translate-x-1/2 top-0 w-6 h-6 rounded-full bg-[#635BFF] flex items-center justify-center border-[4px] border-[#F8F9FB]">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                  </div>
-                  <div className="w-1/2 pl-8">
-                    <h4 className="font-bold text-sm text-[#FBBF24]">Cancer</h4>
-                    <p className="text-[11px] text-slate-400 mt-1">Full Mt, 2nd</p>
-                  </div>
-                </div>
+                      <div className={`w-1/2 ${isLeft ? 'pl-8 opacity-0' : 'pl-8'} flex flex-col items-start`}>
+                        {!isLeft && (
+                          <>
+                            <h4 className="font-bold text-sm text-[#0A1128]">{transit.planet}</h4>
+                            <p className="text-[11px] text-slate-400 mt-1">Current Transit</p>
+                          </>
+                        )}
+                        <h4 className="font-bold text-sm text-[#0A1128] mt-1 mb-1">{transit.status}</h4>
+                        <div className="bg-[#EEF2FF] text-[#635BFF] text-[10px] font-bold px-2 py-1 rounded w-fit mt-1 text-left leading-tight">
+                          {transit.meaning}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
              </div>
           </div>
         </div>
@@ -798,18 +814,25 @@ export default function App() {
           </div>
           <div className="p-6">
              <div className="bg-white rounded-[24px] shadow-sm overflow-hidden p-0 mb-20">
-                <div className="bg-[#E2E8F0] w-full h-48 relative">
-                   <img src="/moon.jpg" className="absolute inset-0 w-full h-full object-cover" alt="Moon" />
-                </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-lg text-[#0A1128] mb-4">Daily Lunar Insight</h3>
-                  <p className="text-sm text-[#64748B] leading-relaxed mb-4">
-                    The Moon in Taurus provides a grounding energy today. Focus on stability, take time to appreciate the simple pleasures in life, and avoid rushing into major financial decisions.
-                  </p>
-                  <p className="text-xs font-semibold text-slate-400 mt-2">
-                    Read more &gt;
-                  </p>
-                </div>
+                <div className="bg-white rounded-[24px] p-6 shadow-sm w-full shrink-0 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-100 rounded-bl-full opacity-50"></div>
+              <h3 className="text-2xl font-bold text-[#0A1128] mb-4 relative z-10">{dailyData ? dailyData.readingTitle : 'Cosmic Energy Reading'}</h3>
+              
+              {isDailyLoading ? (
+                <p className="text-sm text-[#64748B] leading-relaxed mb-6 animate-pulse">
+                  Consulting the cosmos for your daily alignment...
+                </p>
+              ) : (
+                <p className="text-sm text-[#64748B] leading-relaxed mb-6 relative z-10">
+                  {dailyData ? dailyData.readingBody : 'Complete your cosmic profile to receive daily insights.'}
+                </p>
+              )}
+              
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 relative z-10">
+                <span className="text-xs font-bold text-[#0A1128] uppercase tracking-wider">Overall Energy</span>
+                <span className="text-[#635BFF] font-bold text-lg">{dailyData ? dailyData.score : '--'}/100</span>
+              </div>
+            </div>
              </div>
           </div>
         </div>

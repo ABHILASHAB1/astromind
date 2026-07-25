@@ -8,7 +8,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, response: 'Error: Please create the .env.local file with your GEMINI_API_KEY as instructed.' });
     }
     const ai = new GoogleGenAI({ apiKey });
-    const { message, context } = await request.json();
+    const { message, context, category } = await request.json();
 
     if (!message) {
       return NextResponse.json({ success: false, error: 'Message is required' }, { status: 400 });
@@ -16,6 +16,8 @@ export async function POST(request: Request) {
 
     const systemInstruction = `You are AstroMind, an expert, empathetic astrologer and palm reader. Your goal is to synthesize the user's natal astrology chart with their physical palmistry readings to provide holistic, highly accurate, and deeply personalized answers.
     Keep your answers concise, mystical yet practical, and directly address their question.
+    
+    CRITICAL INSTRUCTION: The user has selected the "${category || 'General'}" category for this question. Tailor your response heavily to this lens. If they selected "Tarot Insights", format your response as a simulated Tarot Card draw and interpretation. If they selected "Numerology", focus on numbers and life paths.
     
     CRITICAL RULE FOR MISSING PALM DATA: If the user asks a question that requires a palm reading (or a general reading) AND their palmReading data is missing or null, you MUST EXPLICITLY TELL THEM TO TAKE A PHOTO OF THEIR PALM FIRST. Do not just say you don't have the data. You must say: "I need you to take a photo of your palm first. Please navigate to the Palm Analysis screen and tap 'Scan Palm' so I can read your lines."
     
