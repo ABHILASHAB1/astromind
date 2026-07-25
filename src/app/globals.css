@@ -1,26 +1,77 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+@theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #F8F9FB;
+  --foreground: #0A1128;
+  --primary: #0A1128; 
+  --accent: #635BFF; 
+  --card-bg: #ffffff;
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--background);
+  font-family: 'Inter', -apple-system, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mobile-container {
+  width: 100%;
+  max-width: 414px;
+  height: 100vh;
+  max-height: 896px;
+  background: #F8F9FB;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 640px) {
+  .mobile-container {
+    height: 90vh;
+    border-radius: 40px;
+    border: 12px solid #E2E8F0;
+  }
+}
+
+.primary-button {
+  background-color: var(--primary);
+  color: white;
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+}
+
+.floating-button {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #635BFF, #8B5CF6);
+  border-radius: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  box-shadow: 0 8px 16px rgba(99, 91, 255, 0.4);
+  border: 4px solid #F8F9FB;
+}
+
+.beige-gradient {
+  background: linear-gradient(135deg, #FFF7E6, #FFEAC2);
+}
+
+/* Hide scrollbar for clean UI */
+::-webkit-scrollbar {
+  display: none;
 }
