@@ -725,6 +725,90 @@ export default function App() {
         </div>
       )}
 
+      {/* 6.5. NADI READING VIEW */}
+      {view === 'nadi_reading' && (
+        <div className="flex-1 overflow-y-auto flex flex-col bg-[#F8F9FB] z-20">
+          <div className="flex items-center p-6 pt-12 bg-white sticky top-0 z-30">
+             <button className="text-[#0A1128]" onClick={() => setView('home')}><ChevronLeftIcon /></button>
+             <h2 className="flex-1 text-center font-bold text-lg mr-6 text-[#0A1128]">Nādī Astrology</h2>
+          </div>
+          
+          <div className="bg-[#0A1128] p-6 pb-12 relative overflow-hidden shrink-0">
+             <div className="absolute top-0 right-0 w-48 h-48 bg-[#635BFF] rounded-bl-full opacity-20"></div>
+             <p className="text-[#94A3B8] text-sm relative z-10 max-w-[280px]">
+               Scan your thumbprint to search the ancient palm leaves for your destiny.
+             </p>
+          </div>
+          
+          <div className="p-6 flex-1">
+             <div className="bg-white rounded-[24px] p-6 shadow-sm mb-6">
+               <h3 className="font-bold text-lg mb-4 text-[#0A1128]">1. Biometric Alignment</h3>
+               {nadiImage ? (
+                 <div className="w-full h-32 bg-[#EEF2FF] rounded-xl flex items-center justify-center overflow-hidden mb-4 relative">
+                   <img src={`data:image/jpeg;base64,${nadiImage}`} alt="Thumbprint" className="object-cover w-full h-full opacity-50" />
+                   <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#635BFF] bg-white/80">Thumbprint Captured</div>
+                 </div>
+               ) : (
+                 <button onClick={captureThumbprint} className="w-full bg-[#F8F9FB] border-2 border-dashed border-[#CBD5E1] text-[#64748B] py-6 rounded-xl flex flex-col items-center justify-center mb-4 active:bg-[#EEF2FF]">
+                   <span className="text-2xl mb-2">👆</span>
+                   <span className="text-sm font-semibold">Scan Thumbprint</span>
+                 </button>
+               )}
+
+               <h3 className="font-bold text-lg mb-2 text-[#0A1128] mt-6">2. Seek Attributes</h3>
+               <p className="text-xs text-[#64748B] mb-3">Provide known textual details (e.g., Father=John, Mother=Jane)</p>
+               <input 
+                 type="text" 
+                 className="w-full bg-[#F8F9FB] border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF]/50"
+                 placeholder="Attributes (comma separated)"
+                 value={nadiAttributes}
+                 onChange={e => setNadiAttributes(e.target.value)}
+               />
+
+               <button 
+                 onClick={handleNadiPredict} 
+                 disabled={isNadiLoading}
+                 className="w-full mt-6 bg-gradient-to-r from-[#0A1128] to-[#1E293B] text-white font-bold py-4 rounded-full shadow-lg active:scale-[0.98] transition-transform disabled:opacity-70"
+               >
+                 {isNadiLoading ? "Scanning Ancient Bundles..." : "Find My Leaf"}
+               </button>
+             </div>
+
+             {nadiResult && (
+               <div className="bg-gradient-to-b from-yellow-50 to-amber-100 rounded-[24px] p-6 shadow-sm border border-amber-200">
+                 <div className="flex items-center gap-2 mb-4">
+                   <span className="text-2xl">📜</span>
+                   <h3 className="font-bold text-xl text-amber-900">Leaf Matched!</h3>
+                 </div>
+                 
+                 <div className="bg-white/60 rounded-xl p-4 mb-4">
+                   <p className="text-xs font-bold text-amber-800 uppercase mb-1">Bundle Identification</p>
+                   <p className="text-sm text-amber-950 font-medium">Bundle Index #{nadiResult.biometric.matched_bundle_index}</p>
+                   <p className="text-[10px] text-amber-700 mt-1">Based on {nadiResult.biometric.extracted_minutiae_count} biometric minutiae points.</p>
+                 </div>
+
+                 <div className="bg-white/60 rounded-xl p-4 mb-4">
+                   <p className="text-xs font-bold text-amber-800 uppercase mb-1">Textual Confidence</p>
+                   <p className="text-sm text-amber-950 font-medium">Similarity: {(nadiResult.textual_retrieval.best_leaf_match_score * 100).toFixed(1)}%</p>
+                 </div>
+
+                 <div className="bg-white/60 rounded-xl p-4">
+                   <p className="text-xs font-bold text-amber-800 uppercase mb-2">Kaṇḍam Chapters Located</p>
+                   <div className="flex flex-wrap gap-2">
+                     {nadiResult.kandam_classification.predicted_kandams.map((k: any, i: number) => (
+                       <span key={i} className="bg-amber-900 text-white text-[10px] font-bold px-2 py-1 rounded">
+                         Ch {k.chapter}: {k.name}
+                       </span>
+                     ))}
+                   </div>
+                   <p className="text-[10px] text-amber-700 mt-2">ML Model Confidence (F1): {nadiResult.kandam_classification.model_f1_score}</p>
+                 </div>
+               </div>
+             )}
+          </div>
+        </div>
+      )}
+
       {/* 7. HERO'S JOURNEY (TIMELINE) */}
       {view === 'timeline' && (
         <div className="flex-1 flex flex-col bg-[#F8F9FB] z-20">
