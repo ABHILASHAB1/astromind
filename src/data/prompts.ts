@@ -1,6 +1,7 @@
 export const quickActions = [
   { id: 'daily_horoscope', label: 'Daily Horoscope', icon: '☀️' },
   { id: 'palm', label: 'Palm Scanner', icon: '✋' },
+  { id: 'nadi_reading', label: 'Nādī Leaf', icon: '🍃' },
   { id: 'spiritual_guidance', label: 'Spiritual Guidance', icon: '🧘' },
   { id: 'tarot', label: 'Tarot Insights', icon: '🃏' },
   { id: 'love_compatibility', label: 'Love Compatibility', icon: '❤️' },
