@@ -2,6 +2,15 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { promptCategories, quickActions } from '../data/prompts';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+
+const triggerHaptic = async () => {
+  try {
+    await Haptics.impact({ style: ImpactStyle.Light });
+  } catch (err) {
+    // Ignore error if not running on native device
+  }
+};
 
 // Crisp Outline SVGs matching the Figma
 const PlanetIcon = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0A1128" strokeWidth="1.5"><circle cx="12" cy="12" r="8"/><path d="M4 12c0-4 8-8 16-4M4 12c0 4 8 8 16 4"/></svg>;
@@ -451,28 +460,28 @@ export default function App() {
             
             <div className="grid grid-cols-2 gap-4">
               {/* Tarot Insights */}
-              <div className="bg-white rounded-[20px] p-5 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden" onClick={() => { setSelectedCategory('traditional'); setView('chat'); }}>
+              <div className="bg-white rounded-[20px] p-5 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden" onClick={() => { triggerHaptic(); setSelectedCategory('traditional'); setView('chat'); }}>
                 <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-xl mb-3">🃏</div>
                 <h4 className="font-bold text-sm text-[#0A1128]">Tarot Insights</h4>
                 <p className="text-[10px] text-[#64748B] mt-1 font-medium leading-tight">AI spiritual card reading</p>
               </div>
 
               {/* Love Compatibility */}
-              <div className="bg-white rounded-[20px] p-5 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden" onClick={() => { setSelectedCategory('love'); setView('chat'); }}>
+              <div className="bg-white rounded-[20px] p-5 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden" onClick={() => { triggerHaptic(); setSelectedCategory('love'); setView('chat'); }}>
                 <div className="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center text-xl mb-3">❤️</div>
                 <h4 className="font-bold text-sm text-[#0A1128]">Compatibility</h4>
                 <p className="text-[10px] text-[#64748B] mt-1 font-medium leading-tight">Check relationship harmony</p>
               </div>
 
               {/* Numerology */}
-              <div className="bg-white rounded-[20px] p-5 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden" onClick={() => { setSelectedCategory('traditional'); setView('chat'); }}>
+              <div className="bg-white rounded-[20px] p-5 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden" onClick={() => { triggerHaptic(); setSelectedCategory('traditional'); setView('chat'); }}>
                 <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-xl mb-3">🔢</div>
                 <h4 className="font-bold text-sm text-[#0A1128]">Numerology</h4>
                 <p className="text-[10px] text-[#64748B] mt-1 font-medium leading-tight">Your life path numbers</p>
               </div>
 
               {/* Spiritual Guidance */}
-              <div className="bg-white rounded-[20px] p-5 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden" onClick={() => { setSelectedCategory('growth'); setView('chat'); }}>
+              <div className="bg-white rounded-[20px] p-5 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden" onClick={() => { triggerHaptic(); setSelectedCategory('growth'); setView('chat'); }}>
                 <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-xl mb-3">🧘</div>
                 <h4 className="font-bold text-sm text-[#0A1128]">Spiritual Guide</h4>
                 <p className="text-[10px] text-[#64748B] mt-1 font-medium leading-tight">Connect with inner wisdom</p>
@@ -482,7 +491,7 @@ export default function App() {
 
           {/* Palm Scanner & Birth Chart Hero Cards */}
           <div className="px-6 mt-6 flex flex-col gap-4">
-            <div className="bg-[#0A1128] rounded-[24px] p-6 shadow-xl flex justify-between items-center cursor-pointer relative overflow-hidden" onClick={() => setView('palm')}>
+            <div className="bg-[#0A1128] rounded-[24px] p-6 shadow-xl flex justify-between items-center cursor-pointer relative overflow-hidden" onClick={() => { triggerHaptic(); setView('palm'); }}>
               <div className="relative z-10">
                 <h4 className="font-bold text-lg text-white">Live Palm Scanner</h4>
                 <p className="text-sm font-medium text-white/70 mt-1">AI decodes your palm lines</p>
@@ -491,7 +500,7 @@ export default function App() {
               <div className="absolute right-[-20px] top-[-20px] w-32 h-32 bg-[#635BFF] rounded-full blur-2xl opacity-40"></div>
             </div>
 
-            <div className="bg-white rounded-[24px] border border-slate-200 p-6 shadow-sm flex justify-between items-center cursor-pointer relative overflow-hidden" onClick={() => setView('birth_chart')}>
+            <div className="bg-white rounded-[24px] border border-slate-200 p-6 shadow-sm flex justify-between items-center cursor-pointer relative overflow-hidden" onClick={() => { triggerHaptic(); setView('birth_chart'); }}>
               <div className="relative z-10">
                 <h4 className="font-bold text-lg text-[#0A1128]">Full Birth Chart</h4>
                 <p className="text-sm font-medium text-[#64748B] mt-1">Detailed cosmic blueprint</p>
@@ -711,7 +720,41 @@ export default function App() {
             )}
             {!palmData ? (
               <div className="flex flex-col gap-3 w-full shrink-0">
-                <button onClick={startCamera} disabled={isPalmLoading} className={`w-full bg-[#0A1128] text-white font-semibold py-4 rounded-full shadow-lg flex items-center justify-center gap-2 ${isPalmLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-800'} transition-colors`}>
+                <button onClick={async () => {
+                  triggerHaptic();
+                  import('@capacitor/core').then(async ({ Capacitor }) => {
+                    if (Capacitor.isNativePlatform()) {
+                      const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
+                      try {
+                        const image = await Camera.getPhoto({
+                          quality: 80,
+                          allowEditing: false,
+                          resultType: CameraResultType.Base64,
+                          source: CameraSource.Camera
+                        });
+                        setIsPalmLoading(true);
+                        setPalmError(null);
+                        const base64String = `data:image/jpeg;base64,${image.base64String}`;
+                        const res = await fetch('/api/palm-reader', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ imageBase64: base64String })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          setPalmData(data.reading);
+                        } else {
+                          setPalmError(data.error || 'Failed to analyze palm.');
+                        }
+                      } catch (e) {
+                        console.error(e);
+                      }
+                      setIsPalmLoading(false);
+                    } else {
+                      startCamera();
+                    }
+                  });
+                }} disabled={isPalmLoading} className={`w-full bg-[#0A1128] text-white font-semibold py-4 rounded-full shadow-lg flex items-center justify-center gap-2 ${isPalmLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-800'} transition-colors`}>
                   <CameraIcon /> {isPalmLoading ? 'Scanning...' : 'Open Scanner'}
                 </button>
                 {cameraError && (
